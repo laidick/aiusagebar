@@ -10,7 +10,7 @@ EXEC      := AIUsageBar
 CLT_FW    := /Library/Developer/CommandLineTools/Library/Developer/Frameworks
 TEST_FLAGS := -Xswiftc -F$(CLT_FW) -Xlinker -F$(CLT_FW) -Xlinker -rpath -Xlinker $(CLT_FW)
 
-.PHONY: all submodule build build-rust build-app bundle test test-app test-rust install config run stop dump status login-claude login-codex login-gemini clean
+.PHONY: install-app all submodule build build-rust build-app bundle test test-app test-rust install config run stop dump status login-claude login-codex login-gemini clean
 
 all: build
 
@@ -75,3 +75,9 @@ login-codex:
 	codex login
 login-gemini:
 	agy
+
+# Copy the bundle to /Applications and (re)launch it from there
+install-app: bundle stop
+	rm -rf "/Applications/AI Usage Bar.app"
+	cp -R "build/AI Usage Bar.app" "/Applications/AI Usage Bar.app"
+	open "/Applications/AI Usage Bar.app"
