@@ -306,11 +306,11 @@ Parser mapping — `AntigravityQuotaSummaryParser.swift:43-88`:
 POST https://127.0.0.1:61469/exa.language_server_pb.LanguageServerService/GetUserStatus  -> 200
 ```
 
-Shape (values from this account, email is the machine owner's own):
+Shape (identity fields redacted):
 
 ```json
 {"userStatus":{
-  "name":"Dick Lai","email":"laidick@gmail.com","disableTelemetry":true,
+  "name":"<redacted>","email":"<redacted>","disableTelemetry":true,
   "planStatus":{"planInfo":{"teamsTier":"TEAMS_TIER_PRO","planName":"Pro",
       "monthlyPromptCredits":50000,"monthlyFlowCredits":150000, …},
     "availablePromptCredits":500,"availableFlowCredits":100},

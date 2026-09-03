@@ -689,7 +689,7 @@ The literal values, from gemini-cli source (`packages/core/src/code_assist/oauth
 
 ```
 OAUTH_CLIENT_ID     = 681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com
-OAUTH_CLIENT_SECRET = GOCSPX-REDACTED
+OAUTH_CLIENT_SECRET = GOCSPX-…   (see gemini-cli oauth2.ts; installed-app secret, scraped at runtime)
 ```
 The source comments note this is an installed-application client, so the "secret" is not treated as
 secret. Scraping is still safer than hardcoding, since Google can rotate it.
