@@ -716,20 +716,46 @@ secret. Scraping is still safer than hardcoding, since Google can rotate it.
 
 Only needed if you implement your own login instead of reusing CLI credentials.
 
-### 4a. Claude Code
+### 4a. Claude Code (verified from installed CLI binary 2.1.259, `strings` dump)
 
-Not open source, so no file citation. What is verifiable from the two menu-bar apps:
+Constants object in the binary:
 
-- client id `9d1c250a-e61b-44d9-88ed-5944d1962f5e`
-  (`CodexBar/.../ClaudeOAuthCredentials.swift:26`, `ClaudeBar/.../ClaudeAPIUsageProbe.swift:154`)
-- token endpoint `https://platform.claude.com/v1/oauth/token` (`ClaudeOAuthCredentials.swift:28`)
-- scopes `user:profile user:inference user:sessions:claude_code`, with an explicit warning not to
-  request extras such as `user:mcp_servers` (`ClaudeBar/.../ClaudeAPIUsageProbe.swift:155-156`)
-- authorize URL is `https://claude.ai/oauth/authorize` with PKCE S256; **not** attested anywhere in
-  these four repos, so verify it against the CLI before shipping.
+```
+CONSOLE_AUTHORIZE_URL   https://platform.claude.com/oauth/authorize
+CLAUDE_AI_AUTHORIZE_URL https://claude.com/cai/oauth/authorize      # used for --claudeai (subscription) login
+TOKEN_URL               https://platform.claude.com/v1/oauth/token
+MANUAL_REDIRECT_URL     https://platform.claude.com/oauth/code/callback
+CLIENT_ID               9d1c250a-e61b-44d9-88ed-5944d1962f5e
+```
 
-Recommended: skip your own flow and shell out to `claude auth login --claudeai` in a PTY, the way
-CodexBar does (`CodexBar/Sources/CodexBar/ClaudeLoginRunner.swift:6`, success markers at `:7`).
+Authorize URL builder (loopback variant, port is ephemeral — whatever the local listener bound):
+
+```
+<AUTHORIZE_URL>?code=true
+  &client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e
+  &response_type=code
+  &redirect_uri=http://localhost:<port>/callback
+  &scope=<space-joined>      # CLI full set: org:create_api_key user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload
+  &code_challenge=<S256>
+  &code_challenge_method=S256
+  &state=<random>
+```
+
+For a usage-only app request `user:profile user:inference` (usage endpoint needs `user:profile`).
+
+Token exchange — JSON body, note the extra `state` field:
+
+```
+POST https://platform.claude.com/v1/oauth/token
+Content-Type: application/json
+
+{"grant_type":"authorization_code","code":"<code>","redirect_uri":"http://localhost:<port>/callback",
+ "client_id":"9d1c250a-e61b-44d9-88ed-5944d1962f5e","code_verifier":"<verifier>","state":"<state>"}
+```
+
+Response: `access_token`, `refresh_token`, `expires_in` (seconds), `scope`. The CLI computes
+`expiresAt = now + expires_in*1000` (ms). The callback query carries `code` and `state`; the CLI
+also accepts a manually pasted `code#state` string when using MANUAL_REDIRECT_URL.
 
 ### 4b. Codex CLI (fully verified in openai/codex)
 
