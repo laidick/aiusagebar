@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import AIUsageBarCore
 
 /// Opens a login flow for one vendor in Terminal.app.
 enum LoginActions {
@@ -14,8 +16,59 @@ enum LoginActions {
         Vendor(id: "antigravity", title: "Gemini", command: "agy"),
     ]
 
+    /// Vendors with no CLI login: the key is pasted into a prompt and stored in config.toml.
+    struct KeyVendor: Sendable {
+        let id: String
+        let title: String
+        /// Menu/footer wording, e.g. `OpenCode Go key…`.
+        var actionTitle: String { "\(title) key…" }
+    }
+
+    static let keyVendors: [KeyVendor] = [
+        KeyVendor(id: "opencode-go", title: "OpenCode Go"),
+    ]
+
     static func vendor(id: String) -> Vendor? {
         vendors.first { $0.id == id }
+    }
+
+    static func keyVendor(id: String) -> KeyVendor? {
+        keyVendors.first { $0.id == id }
+    }
+
+    /// Asks for the API key, writes it into `~/.config/ai-usagebar/config.toml`, then refreshes.
+    @MainActor
+    static func promptForKey(vendorID: String, onSaved: () -> Void) {
+        guard let vendor = keyVendor(id: vendorID) else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "\(vendor.title) API key"
+        alert.informativeText = """
+        Stored in ~/.config/ai-usagebar/config.toml under [\(vendor.id)].
+        """
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+
+        let field = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
+        field.placeholderString = "OPENCODE_GO_API_KEY"
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let key = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return }
+
+        do {
+            try ConfigEditor.writeOpenCodeGoKey(key)
+            onSaved()
+        } catch {
+            let failure = NSAlert()
+            failure.messageText = "Could not save the key"
+            failure.informativeText = error.localizedDescription
+            failure.runModal()
+        }
     }
 
     static func login(vendorID: String) {

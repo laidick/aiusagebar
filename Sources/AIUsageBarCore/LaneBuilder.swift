@@ -7,14 +7,18 @@ public enum LaneBuilder {
         "anthropic": "Claude",
         "openai": "Codex",
         "antigravity": "Gemini",
+        "opencode-go": "OpenCode Go",
     ]
 
-    private static let sessionTokens = ["5h", "session"]
+    private static let sessionTokens = ["5h", "session", "rolling"]
     private static let weeklyTokens = ["weekly", "7d"]
+    /// Monthly lanes share the weekly slot but keep their own key and window.
+    private static let monthlyToken = "monthly"
 
     /// Reset-window lengths used to derive a pace marker when the backend gives no `% elapsed`.
     static let sessionWindow: Double = 5 * 3_600
     static let weeklyWindow: Double = 7 * 86_400
+    static let monthlyWindow: Double = 30 * 86_400
 
     public static func build(_ snapshot: UsageSnapshot, now: Date = Date()) -> LaneTable {
         LaneTable(vendors: snapshot.entries.map { vendorLanes(for: $0, now: now) })
@@ -39,8 +43,13 @@ public enum LaneBuilder {
     static func elapsedFraction(for metric: UsageMetric, slot: LaneKind, now: Date) -> Double? {
         if let fromDetail = elapsedFromDetail(metric.detail) { return fromDetail }
         guard let reset = metric.resetDate else { return nil }
-        let window = slot == .session ? sessionWindow : weeklyWindow
-        return clamp(1 - reset.timeIntervalSince(now) / window)
+        return clamp(1 - reset.timeIntervalSince(now) / window(for: metric.label, slot: slot))
+    }
+
+    /// A monthly label overrides the slot's default window.
+    static func window(for label: String, slot: LaneKind) -> Double {
+        if label.lowercased().contains(monthlyToken) { return monthlyWindow }
+        return slot == .session ? sessionWindow : weeklyWindow
     }
 
     private static func clamp(_ value: Double) -> Double { min(max(value, 0), 1) }
@@ -67,6 +76,8 @@ public enum LaneBuilder {
 
     static func kind(of label: String) -> LaneKind {
         let lower = label.lowercased()
+        // Monthly first: it shares the weekly slot but must not be mistaken for it.
+        if lower.contains(monthlyToken) { return .weekly }
         if sessionTokens.contains(where: { lower.contains($0) }) { return .session }
         if weeklyTokens.contains(where: { lower.contains($0) }) { return .weekly }
         return .unknown

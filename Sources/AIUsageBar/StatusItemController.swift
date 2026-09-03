@@ -82,6 +82,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         login.submenu = submenu
         menu.addItem(login)
 
+        for vendor in LoginActions.keyVendors {
+            let item = NSMenuItem(
+                title: vendor.actionTitle, action: #selector(menuSetKey(_:)), keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = vendor.id
+            menu.addItem(item)
+        }
+
         if LaunchAtLogin.isAvailable {
             let toggle = NSMenuItem(title: "Launch at login", action: #selector(menuToggleLaunch), keyEquivalent: "")
             toggle.target = self
@@ -108,6 +117,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     @objc private func menuLogin(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         LoginActions.login(vendorID: id)
+    }
+
+    @objc private func menuSetKey(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        LoginActions.promptForKey(vendorID: id) { store.refresh() }
     }
 
     @objc private func menuToggleLaunch() {

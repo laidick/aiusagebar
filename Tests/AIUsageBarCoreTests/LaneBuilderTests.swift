@@ -123,3 +123,44 @@ import Testing
     let table = LaneBuilder.build(try Fixture.snapshot())
     #expect(table.severity == .low)
 }
+
+@Test func namesTheOpenCodeGoBackend() {
+    let table = LaneBuilder.build(
+        UsageSnapshot(entries: [OpenCodeGo.entry(rolling: 1, weekly: 2, monthly: 3)])
+    )
+    #expect(table.vendors[0].title == "OpenCode Go")
+}
+
+@Test func classifiesRollingAsSessionAndMonthlyAsWeekly() {
+    #expect(LaneBuilder.kind(of: "Rolling") == .session)
+    #expect(LaneBuilder.kind(of: "Rolling (5h)") == .session)
+    #expect(LaneBuilder.kind(of: "Monthly") == .weekly)
+}
+
+@Test func openCodeGoRollingAndWeeklyShareThePrimaryRow() {
+    let table = LaneBuilder.build(
+        UsageSnapshot(entries: [OpenCodeGo.entry(rolling: 12.3, weekly: 45.6, monthly: 78.9)])
+    )
+    let vendor = table.vendors[0]
+    #expect(vendor.rows.count == 2)
+
+    let primary = vendor.rows[0]
+    #expect(primary.isPrimary)
+    #expect(primary.title == "OpenCode Go")
+    #expect(primary.session?.percent == 12.3)
+    #expect(primary.weekly?.percent == 45.6)
+
+    let monthly = vendor.rows[1]
+    #expect(!monthly.isPrimary)
+    #expect(monthly.title == "Monthly")
+    #expect(monthly.session == nil)
+    #expect(monthly.weekly?.percent == 78.9)
+}
+
+@Test func monthlyPaceUsesTheThirtyDayWindow() {
+    let pace = LaneBuilder.elapsedFraction(
+        for: Synthetic.metric(label: "Monthly", resetInSeconds: 15 * 86_400),
+        slot: .weekly, now: Synthetic.now
+    )
+    #expect(pace == 0.5)
+}

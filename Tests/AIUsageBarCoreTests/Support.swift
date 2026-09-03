@@ -40,3 +40,19 @@ enum Synthetic {
         UsageMetric(label: label, percent: 0, value: "0%")
     }
 }
+
+/// The `opencode-go` backend's shape: Rolling / Weekly / Monthly.
+enum OpenCodeGo {
+    static func entry(rolling: Double, weekly: Double, monthly: Double) -> VendorEntry {
+        VendorEntry(
+            id: "opencode-go", name: "opencode-go", displayName: "OpenCode Go",
+            shortName: "ocg", plan: nil, status: nil, error: nil, stale: false,
+            fetchedAt: nil,
+            metrics: [
+                UsageMetric(label: "Rolling", percent: rolling),
+                UsageMetric(label: "Weekly", percent: weekly),
+                UsageMetric(label: "Monthly", percent: monthly),
+            ]
+        )
+    }
+}

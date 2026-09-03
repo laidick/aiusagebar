@@ -6,6 +6,7 @@ struct VendorSection: View {
     let vendor: VendorLanes
     let now: Date
     let onLogin: (String) -> Void
+    let onSetKey: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -59,6 +60,8 @@ struct VendorSection: View {
         }
     }
 
+    private var isKeyVendor: Bool { LoginActions.keyVendor(id: vendor.id) != nil }
+
     private func errorLine(_ error: String) -> some View {
         HStack(spacing: 6) {
             Text(error)
@@ -67,7 +70,11 @@ struct VendorSection: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 4)
-            if vendor.needsLogin {
+            if isKeyVendor, vendor.needsAPIKey {
+                Button("Set key") { onSetKey(vendor.id) }
+                    .buttonStyle(.borderless)
+                    .font(.system(size: 10, weight: .semibold))
+            } else if vendor.needsLogin {
                 Button("Log in") { onLogin(vendor.id) }
                     .buttonStyle(.borderless)
                     .font(.system(size: 10, weight: .semibold))

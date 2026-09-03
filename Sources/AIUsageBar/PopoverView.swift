@@ -49,7 +49,12 @@ struct PopoverView: View {
         if let table = store.table, !table.vendors.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(table.vendors) { vendor in
-                    VendorSection(vendor: vendor, now: now, onLogin: LoginActions.login(vendorID:))
+                    VendorSection(
+                        vendor: vendor,
+                        now: now,
+                        onLogin: LoginActions.login(vendorID:),
+                        onSetKey: promptForKey
+                    )
                 }
                 if let error = store.lastError {
                     Text(error)
@@ -106,6 +111,11 @@ struct PopoverView: View {
                         .buttonStyle(.borderless)
                         .font(.system(size: 10))
                 }
+                ForEach(LoginActions.keyVendors, id: \.id) { vendor in
+                    Button(vendor.actionTitle) { promptForKey(vendor.id) }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 10))
+                }
                 Spacer(minLength: 0)
             }
 
@@ -121,6 +131,10 @@ struct PopoverView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    private func promptForKey(_ vendorID: String) {
+        LoginActions.promptForKey(vendorID: vendorID) { store.refresh() }
     }
 
     private var updatedText: String {

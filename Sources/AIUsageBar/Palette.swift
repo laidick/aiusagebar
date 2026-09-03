@@ -28,6 +28,7 @@ enum Palette {
         case "anthropic": return hex(0xD9_77_57)
         case "openai": return hex(0x10_A3_7F)
         case "antigravity": return hex(0x42_85_F4)
+        case "opencode-go": return hex(0xA7_8B_FA)
         default: return .secondaryLabelColor
         }
     }

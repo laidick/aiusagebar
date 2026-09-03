@@ -89,6 +89,14 @@ public struct VendorLanes: Sendable, Equatable, Identifiable {
         let haystack = error.lowercased()
         return needles.contains { haystack.contains($0) }
     }
+
+    /// Missing-API-key failures get a "Set key" affordance instead.
+    public var needsAPIKey: Bool {
+        guard let error else { return false }
+        let needles = ["api_key", "api key", "key"]
+        let haystack = error.lowercased()
+        return needles.contains { haystack.contains($0) }
+    }
 }
 
 public struct LaneTable: Sendable, Equatable {

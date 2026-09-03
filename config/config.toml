@@ -2,8 +2,8 @@
 # Reference: vendor/ai-usagebar/config.example.toml
 
 [ui]
-# Overview order shown in the macOS menu bar: Claude, Codex, Gemini (Antigravity)
-overview_vendors = ["anthropic", "openai", "antigravity"]
+# Overview order shown in the macOS menu bar: Claude, Codex, Gemini (Antigravity), OpenCode Go
+overview_vendors = ["anthropic", "openai", "antigravity", "opencode-go"]
 
 [anthropic]
 enabled = true
@@ -15,6 +15,12 @@ enabled = true
 # Google shut Gemini CLI Code Assist OAuth for individual accounts in 2026-06.
 [antigravity]
 enabled = true
+
+# OpenCode Go is an API-key vendor: export OPENCODE_GO_API_KEY, or set
+# api_key = "..." here (the menu bar app's "OpenCode Go key…" action writes it).
+[opencode-go]
+enabled = true
+api_key_env = "OPENCODE_GO_API_KEY"
 
 # Disable defaults we don't need
 [zai]
