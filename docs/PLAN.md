@@ -16,6 +16,7 @@ Clone of aiusagebar.com: native macOS menu bar app showing live usage limits for
 |---|---|
 | Menu bar: one compact gauge per provider (session % fill), click opens popover | yes |
 | Popover: per provider — plan, session (5h) %, weekly (7d) %, reset countdown `↻ 1h 14m` / `6d 15h`, per-model rows (Claude model limits, Gemini per-model daily buckets, Codex extra limits), credits/extra-usage spend | yes |
+| Gemini backend order: (1) Antigravity local server via `agy` CLI (reuse running same-user process, else spawn under PTY; `RetrieveUserQuotaSummary` + `GetUserStatus`), (2) Gemini Code Assist remote (`loadCodeAssist` + `retrieveUserQuota`) with Google OAuth via gemini-cli client — only works for Standard/Enterprise tiers since Google's 2026-06 consumer shutdown. See `docs/ANTIGRAVITY-REFERENCE.md`. | yes |
 | Auth: reuse CLI credentials (Claude Keychain/file, `~/.codex/auth.json`, `~/.gemini/oauth_creds.json` + Keychain `gemini-cli-oauth`) | yes |
 | Auth: built-in OAuth login (browser, PKCE loopback) per provider when no creds / creds invalid; tokens stored in app's own file `~/Library/Application Support/AIUsageBar/credentials.json` (0600). Never write back into CLI files. | yes |
 | Token refresh for app-owned creds; CLI-owned expired creds → refresh in memory only | yes |
