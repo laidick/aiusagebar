@@ -12,9 +12,38 @@ public enum LaneBuilder {
     private static let sessionTokens = ["5h", "session"]
     private static let weeklyTokens = ["weekly", "7d"]
 
-    public static func build(_ snapshot: UsageSnapshot) -> LaneTable {
-        LaneTable(vendors: snapshot.entries.map(vendorLanes(for:)))
+    /// Reset-window lengths used to derive a pace marker when the backend gives no `% elapsed`.
+    static let sessionWindow: Double = 5 * 3_600
+    static let weeklyWindow: Double = 7 * 86_400
+
+    public static func build(_ snapshot: UsageSnapshot, now: Date = Date()) -> LaneTable {
+        LaneTable(vendors: snapshot.entries.map { vendorLanes(for: $0, now: now) })
     }
+
+    /// `"Resets in 6d 10h · 8% elapsed · on track"` -> `0.08`.
+    static func elapsedFromDetail(_ detail: String?) -> Double? {
+        guard let detail, let range = detail.range(of: "% elapsed") else { return nil }
+        var digits = ""
+        var index = range.lowerBound
+        while index > detail.startIndex {
+            index = detail.index(before: index)
+            let ch = detail[index]
+            guard ch.isASCII, ch.isNumber else { break }
+            digits.insert(ch, at: digits.startIndex)
+        }
+        guard let percent = Double(digits) else { return nil }
+        return clamp(percent / 100)
+    }
+
+    /// Detail string first, then the reset instant against the slot's window length.
+    static func elapsedFraction(for metric: UsageMetric, slot: LaneKind, now: Date) -> Double? {
+        if let fromDetail = elapsedFromDetail(metric.detail) { return fromDetail }
+        guard let reset = metric.resetDate else { return nil }
+        let window = slot == .session ? sessionWindow : weeklyWindow
+        return clamp(1 - reset.timeIntervalSince(now) / window)
+    }
+
+    private static func clamp(_ value: Double) -> Double { min(max(value, 0), 1) }
 
     public static func displayName(for entry: VendorEntry) -> String {
         displayNames[entry.id] ?? entry.displayName
@@ -61,23 +90,30 @@ public enum LaneBuilder {
         return words.joined(separator: " ")
     }
 
-    private static func vendorLanes(for entry: VendorEntry) -> VendorLanes {
+    private static func vendorLanes(for entry: VendorEntry, now: Date) -> VendorLanes {
         var order: [String] = []
         var sessions: [String: Lane] = [:]
         var weeklies: [String: Lane] = [:]
 
+        func lane(_ metric: UsageMetric, _ slot: LaneKind) -> Lane {
+            Lane(metric: metric, elapsedFraction: elapsedFraction(for: metric, slot: slot, now: now))
+        }
+
         for metric in entry.metrics {
             let k = key(of: metric.label, entry: entry)
             if !order.contains(k) { order.append(k) }
-            let lane = Lane(metric: metric)
             switch kind(of: metric.label) {
             case .session:
-                sessions[k] = lane
+                sessions[k] = lane(metric, .session)
             case .weekly:
-                weeklies[k] = lane
+                weeklies[k] = lane(metric, .weekly)
             case .unknown:
                 // First sighting of a repeated key is the session lane, second the weekly one.
-                if sessions[k] == nil { sessions[k] = lane } else if weeklies[k] == nil { weeklies[k] = lane }
+                if sessions[k] == nil {
+                    sessions[k] = lane(metric, .session)
+                } else if weeklies[k] == nil {
+                    weeklies[k] = lane(metric, .weekly)
+                }
             }
         }
 

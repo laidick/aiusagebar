@@ -76,6 +76,49 @@ import Testing
     #expect(ResetFormatter.string(until: primary.weekly!.resetAt!, now: now) == "6d 10h")
 }
 
+@Test func paceComesFromTheDetailStringWhenPresent() throws {
+    let table = LaneBuilder.build(try Fixture.snapshot(), now: Synthetic.now)
+    let claude = table.vendors[0].rows[0]
+    #expect(claude.weekly?.elapsedFraction == 0.08)
+    #expect(claude.session?.elapsedFraction == 0.12)
+    #expect(table.vendors[1].rows[0].session?.elapsedFraction == 0.83)
+}
+
+@Test func paceFallsBackToTheResetWindow() {
+    let weekly = LaneBuilder.elapsedFraction(
+        for: Synthetic.metric(label: "Gemini", resetInSeconds: 3.5 * 86_400),
+        slot: .weekly, now: Synthetic.now
+    )
+    #expect(weekly == 0.5)
+
+    let session = LaneBuilder.elapsedFraction(
+        for: Synthetic.metric(label: "Gemini", resetInSeconds: 3_600),
+        slot: .session, now: Synthetic.now
+    )
+    #expect(session == 0.8)
+}
+
+@Test func paceIsNilWithoutDetailOrReset() {
+    let none = LaneBuilder.elapsedFraction(
+        for: Synthetic.bare(label: "Gemini"), slot: .session, now: Synthetic.now
+    )
+    #expect(none == nil)
+}
+
+@Test func paceFromWindowIsClampedToUnitRange() {
+    let past = LaneBuilder.elapsedFraction(
+        for: Synthetic.metric(label: "Gemini", resetInSeconds: -3_600),
+        slot: .session, now: Synthetic.now
+    )
+    #expect(past == 1)
+
+    let far = LaneBuilder.elapsedFraction(
+        for: Synthetic.metric(label: "Gemini", resetInSeconds: 30 * 86_400),
+        slot: .weekly, now: Synthetic.now
+    )
+    #expect(far == 0)
+}
+
 @Test func overallSeverityIsLowForFixture() throws {
     let table = LaneBuilder.build(try Fixture.snapshot())
     #expect(table.severity == .low)

@@ -12,19 +12,26 @@ public struct Lane: Sendable, Equatable {
     public let value: String
     public let resetAt: Date?
     public let severity: Severity
+    /// How far through the reset window we are, 0...1. `nil` when unknown.
+    public let elapsedFraction: Double?
 
-    public init(percent: Double, value: String, resetAt: Date?, severity: Severity) {
+    public init(
+        percent: Double, value: String, resetAt: Date?, severity: Severity,
+        elapsedFraction: Double? = nil
+    ) {
         self.percent = percent
         self.value = value
         self.resetAt = resetAt
         self.severity = severity
+        self.elapsedFraction = elapsedFraction
     }
 
-    public init(metric: UsageMetric) {
+    public init(metric: UsageMetric, elapsedFraction: Double? = nil) {
         self.percent = metric.percent
         self.value = metric.value ?? "\(Int(metric.percent.rounded()))%"
         self.resetAt = metric.resetDate
         self.severity = Severity.resolve(percent: metric.percent, backend: metric.severity)
+        self.elapsedFraction = elapsedFraction
     }
 }
 

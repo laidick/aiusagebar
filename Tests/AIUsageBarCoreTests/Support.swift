@@ -21,3 +21,22 @@ enum Fixture {
         return date
     }
 }
+
+/// Metrics built relative to a fixed `now`, for pace-marker tests.
+enum Synthetic {
+    static let now = Fixture.date("2026-09-03T00:00:00Z")
+
+    /// A metric with no `detail`, resetting `seconds` after `now`.
+    static func metric(label: String, resetInSeconds seconds: Double) -> UsageMetric {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return UsageMetric(
+            label: label, percent: 0, value: "0%",
+            resetAt: formatter.string(from: now.addingTimeInterval(seconds)), severity: "low"
+        )
+    }
+
+    static func bare(label: String) -> UsageMetric {
+        UsageMetric(label: label, percent: 0, value: "0%")
+    }
+}

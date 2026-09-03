@@ -24,6 +24,10 @@ struct LaneCell: View {
         }
     }
 
+    private static let barHeight: Double = 5
+    private static let tickWidth: Double = 2
+    private static let tickHeight: Double = barHeight * 1.6
+
     private var bar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
@@ -32,9 +36,24 @@ struct LaneCell: View {
                 Capsule()
                     .fill(Color.severity(lane?.severity ?? .low))
                     .frame(width: max(fill * geo.size.width, lane == nil ? 0 : 2))
+                if let pace = lane?.elapsedFraction {
+                    paceTick(in: geo.size.width, at: pace)
+                }
             }
         }
-        .frame(height: 5)
+        .frame(height: Self.barHeight)
+    }
+
+    /// Thin red tick showing where usage would be if spent evenly over the window.
+    private func paceTick(in width: Double, at fraction: Double) -> some View {
+        let w = Self.tickWidth
+        let centre = min(max(fraction, 0), 1) * width
+        let x = min(max(centre - w / 2, 0), max(width - w, 0))
+        return Capsule()
+            .fill(Color(Palette.danger))
+            .overlay(Capsule().strokeBorder(Color.black.opacity(0.35), lineWidth: 0.5))
+            .frame(width: w, height: Self.tickHeight)
+            .offset(x: x)
     }
 
     private var fill: Double {
