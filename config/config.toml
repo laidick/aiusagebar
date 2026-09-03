@@ -1,0 +1,24 @@
+# ai-usagebar config installed by `make config` → ~/.config/ai-usagebar/config.toml
+# Reference: vendor/ai-usagebar/config.example.toml
+
+[ui]
+# Overview order shown in the macOS menu bar: Claude, Codex, Gemini (Antigravity)
+overview_vendors = ["anthropic", "openai", "antigravity"]
+
+[anthropic]
+enabled = true
+
+[openai]
+enabled = true
+
+# Gemini quota comes from Google Antigravity's local server (agy CLI / Antigravity app).
+# Google shut Gemini CLI Code Assist OAuth for individual accounts in 2026-06.
+[antigravity]
+enabled = true
+
+# Disable defaults we don't need
+[zai]
+enabled = false
+
+[openrouter]
+enabled = false

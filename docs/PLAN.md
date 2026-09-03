@@ -1,5 +1,10 @@
 # AI Usage Bar — Implementation Plan
 
+> **Status 2026-09-03: superseded.** Adopted `akitaonrails/ai-usagebar` (vendor/ submodule) instead of
+> the own-Swift build below — it already ships Claude/Codex/Antigravity(Gemini) fetching, CLI-cred reuse,
+> CLI-driven browser OAuth login, tests, and a Swift macOS menu bar app. The phase-1 scaffold lives on
+> branch `feat/scaffold-core` for reference.
+
 Clone of aiusagebar.com: native macOS menu bar app showing live usage limits for
 **Claude Code, OpenAI Codex, Google Gemini CLI**.
 
