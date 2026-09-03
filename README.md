@@ -13,6 +13,13 @@ The menu bar shows only a small severity-tinted gauge ring. Clicking it opens a 
 with a Vendor | Plan | Session | Weekly table; right-clicking gives Refresh / Log in ▸ /
 Launch at login / Quit.
 
+![AI Usage Bar popover: Claude, Codex, Gemini session and weekly limits with pace markers](docs/img/popover.png)
+
+Menu bar shows only a small gauge icon (color = worst severity). Click it for the table: per vendor
+plan, **session (5h)** and **weekly (7d)** usage with reset countdown, Claude's model-scoped limit
+(e.g. Fable) as a sub-row, and a thin **red pace tick** marking where usage would sit if spent evenly
+over the window — fill left of the tick means headroom, fill past it means ahead of pace.
+
 ## Quick start
 
 ```bash
